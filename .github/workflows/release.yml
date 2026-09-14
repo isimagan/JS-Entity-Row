@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "package.json"
+      - "version.json"
+      - ".github/workflows/release.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Test, build and verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test
+      - name: Verify versions
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          const packageJson = JSON.parse(fs.readFileSync("package.json", "utf8"));
+          const packageLock = JSON.parse(fs.readFileSync("package-lock.json", "utf8"));
+          const versionJson = JSON.parse(fs.readFileSync("version.json", "utf8"));
+          const versions = new Set([
+            packageJson.version,
+            packageLock.version,
+            packageLock.packages?.[""]?.version,
+            versionJson.version,
+          ]);
+          if (versions.size !== 1 || versions.has(undefined)) process.exit(1);
+          NODE
+      - name: Build distribution bundle
+        run: npm run clean && npm run build
+      - name: Verify committed bundle
+        run: git diff --exit-code -- dist/JS-Entity-Row.js
+
+  release:
+    name: Publish release
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+      - name: Read version
+        id: version
+        run: echo "tag=v$(jq -r '.version' version.json)" >> "$GITHUB_OUTPUT"
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            exit 0
+          fi
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$TAG" --generate-notes

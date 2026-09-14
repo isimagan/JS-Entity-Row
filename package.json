@@ -1,0 +1,15 @@
+{
+  "name": "js-entity-row",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/index.js --bundle --format=esm --target=es2022 --legal-comments=none --outfile=dist/JS-Entity-Row.js",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true }); require('node:fs').mkdirSync('dist');\"",
+    "test": "node --test",
+    "watch": "npm run build -- --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  }
+}

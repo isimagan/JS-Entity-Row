@@ -1,52 +1,44 @@
 # Building plan
-Based on: [lovelace template entity row](https://github.com/thomasloven/lovelace-template-entity-row)
 
-## Template entity row structure
-| Parameter | Type | Description |
-|---|---|---|
-| `icon` | string | - |
-| `name` | string | - |
-| `state` | string | - |
-| `secondary` | string | - |
-| `image` | string | - |
-| `active` | boolean | if this evaluates to "true" or "false", the icon gets will always look active or inactive respectively |
-| `entity` | entity | if this evaluates to an entity id, `icon`, `name`, `state` and `image` will be taken from that entity unless manually overridden. Specifying an entity will also let you use action |
-| `condition` | boolean | if this is set but does not evaluate to "true", the row is not displayed |
-| `toggle` | boolean | if this evaluates to "true" a toggle is shown instead of the state. The toggle is connected to the `entity`. This will only show a toggle, nothing else. No sliders, no dropdowns, no media controls. `toggle` means Toggle.
-| `tap_action` | action | can be templated if the template evaluates to a valid action configuration in python format. Standard YAML without templates works too. |
-| `hold_action` | action | can be templated if the template evaluates to a valid action configuration in python format. Standard YAML without templates works too. |
-| `double_tap_action` | action | can be templated if the template evaluates to a valid action configuration in python format. Standard YAML without templates works too. |
-| `color` | string | the CSS color of the icon |
+Based on [lovelace-template-entity-row](https://github.com/thomasloven/lovelace-template-entity-row).
 
-## My structure
-| Parameter | Required | Type | JS | Standard | Standard if entity is defined | Description |
-|---|---|---|---|---|---|---|
-| `entity` | no | entity | no | - | - | - |
-| `name` | no | string | yes | Row | Entity's name | - |
-| `icon` | no | string | yes | mdi:ab-testing | Entity's icon | - |
-| `state` | no | string | yes | - | Entity state | - |
-| `secondary` | no | string | yes | - | - | - |
-| `image` | | | | | | ChatGPT help |
-| `active` | no | boolean | yes | - | Overwritten by entity | If entity switches between active and inactive, this will overwrite this parameter |
-| `condition` | no | boolean | yes | true | true | if this evaluates to "true" or "false", the icon gets will always look active or inactive respectively |
-| `tap_action` | no | action | yes | none | more-info | Tap on name |
-| `hold_action` | no | action | yes | none | none | Hold on name |
-| `double_tap_action` | no | action | yes | none | none | Double tap on name |
-| ~~`toggle`~~ | | | | | | Comes in a future update |
+## Version 1
 
-### In the future
-`state` can be action button, toggle or string, in that order and prioritation. But as three different parameters.
+| Parameter | Required | Type | JS | Default | Default with entity | Description |
+| --- | :---: | --- | :---: | --- | --- | --- |
+| `entity` | No | entity ID | ❌ | — | — | Supplies entity defaults and enables the default more-info action. |
+| `name` | No | string | ✅ | `Row` | Entity name | Primary row text. |
+| `icon` | No | string | ✅ | `mdi:ab-testing` | Entity icon | Explicit icon disables the entity picture. |
+| `image` | No | string | ✅ | — | Entity picture | Explicit image has priority over the icon. |
+| `state` | No | string | ✅ | `-` | Formatted entity state | Right-aligned state text. |
+| `secondary` | No | string | ✅ | — | — | Secondary text below the name. |
+| `color` | No | CSS color | ✅ | Automatic | Automatic | Overrides the icon color. |
+| `active` | No | boolean | ✅ | Automatic | Entity state | Explicit value overrides the entity's active icon state. |
+| `condition` | No | boolean | ✅ | `true` | `true` | The row is hidden only when this resolves to `false`. |
+| `tap_action` | No | action | ✅ | `none` | `more-info` | Tap the name/secondary area. |
+| `hold_action` | No | action | ✅ | `none` | `none` | Hold the name/secondary area. |
+| `double_tap_action` | No | action | ✅ | `none` | `none` | Double-tap the name/secondary area. |
+
+JavaScript templates use `[[[ return ... ]]]` and receive `entity`, `states`,
+`hass`, `config`, `user` and `helpers`, matching JS Badge. Errors are logged and
+handled without breaking the parent Entities card. `condition` fails open.
+
+All actions support sequential multi-actions using `action: multi-actions` and an
+`actions` array. `action: multi-action` is accepted as an alias. Delay steps are
+supported.
+
+## Future version
+
+The state area will support three mutually exclusive presentations in this order:
+
+1. Action button when `button_text` is defined.
+2. Toggle when `toggle` is `true`.
+3. State string.
 
 | Parameter | Type | Description |
-|---|---|---|
-| `button_text` | string / JS | If parameter is defined, the state will be an action button with this text |
-| `toggle` | boolean | If this is true, then a toggle is shown |
-| `state` | string / JS | As shown in table over |
-
-With these parameters comes actions:
-| Parameter | Type |
-|---|---|
-| `toggle_action` | action / JS |
-| `button_action` | action / JS |
-
-All actions (tap, hold, double tap, toggle and button) shall be able to use multi-actions (as in "Custom card")
+| --- | --- | --- |
+| `button_text` | string / JS | Shows an action button with this text. |
+| `toggle` | boolean / JS | Shows a toggle when `true`. |
+| `state` | string / JS | State text when neither button nor toggle is active. |
+| `toggle_action` | action / JS | Toggle interaction; supports multi-actions. |
+| `button_action` | action / JS | Button interaction; supports multi-actions. |
