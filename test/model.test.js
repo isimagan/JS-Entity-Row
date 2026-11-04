@@ -11,15 +11,27 @@ const entity = {
     entity_picture: "/local/kitchen.png",
   },
 };
-const hass = { states: { "light.kitchen": entity }, user: { name: "Martin" } };
+const hass = {
+  states: { "light.kitchen": entity },
+  user: { name: "Martin" },
+  formatEntityName: () => "Kitchen · Light",
+};
 
 test("uses entity defaults and picture", () => {
   const model = createRowModel({ entity: "light.kitchen" }, hass);
-  assert.equal(model.name, "Kitchen");
+  assert.equal(model.name, "Kitchen · Light");
   assert.equal(model.state, "on");
   assert.equal(model.image, "/local/kitchen.png");
   assert.equal(model.icon, "");
   assert.equal(model.visible, true);
+});
+
+test("falls back to the friendly name on older Home Assistant versions", () => {
+  const model = createRowModel(
+    { entity: "light.kitchen" },
+    { states: hass.states },
+  );
+  assert.equal(model.name, "Kitchen");
 });
 
 test("explicit image and icon priority is deterministic", () => {
