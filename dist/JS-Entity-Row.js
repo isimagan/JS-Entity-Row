@@ -60,6 +60,10 @@ function formatState(config, hass, entity) {
   if (!entity) return "-";
   return hass?.formatEntityState?.(entity) ?? entity.state ?? "-";
 }
+function formatName(hass, entity, fallback) {
+  if (!entity) return fallback;
+  return hass?.formatEntityName?.(entity) ?? entity.attributes?.friendly_name ?? fallback;
+}
 function createRowModel(config, hass) {
   const entity = getEntity(config, hass);
   const context = { config, hass, entity };
@@ -77,7 +81,7 @@ function createRowModel(config, hass) {
     visible: readBoolean(config.condition, true, context, "condition"),
     active: config.active === void 0 || config.active === null ? void 0 : readBoolean(config.active, void 0, context, "active"),
     name: normalizeText(
-      read(config.name ?? entity?.attributes?.friendly_name ?? config.entity ?? "Row"),
+      read(config.name ?? formatName(hass, entity, config.entity ?? "Row")),
       "Row"
     ),
     secondary: normalizeText(read(config.secondary)),
