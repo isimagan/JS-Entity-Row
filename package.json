@@ -1,6 +1,7 @@
 {
   "name": "js-entity-row",
   "version": "1.0.1",
+  "description": "A Home Assistant entity row with client-side JavaScript templates.",
   "private": true,
   "type": "module",
   "scripts": {
